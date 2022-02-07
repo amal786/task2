@@ -1,8 +1,14 @@
-#!/bin/bash
+#!/bin/sh
+
 set -e
 
+echo "ENVIRONMENT: $RAILS_ENV"
+
+#check bundle
+bundle check || bundle install
+
 # Remove a potentially pre-existing server.pid for Rails.
-rm -f /myruby/tmp/pids/server.pid
+rm -f $APP_PATH/tmp/pids/server.pid
 
 # Then exec the container's main process (what's set as CMD in the Dockerfile).
-exec "$@"
+bundle exec ${@}

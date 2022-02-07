@@ -1,15 +1,38 @@
-FROM ruby:2.7.3
-RUN apt-get update -qq && apt-get install -y nodejs postgresql-client
-WORKDIR /myruby
-COPY Gemfile /myruby/Gemfile
-COPY Gemfile.lock /myruby/Gemfile.lock
-RUN bundle install
+FROM ruby:2.7.3-alpine
+
+ENV APP_PATH /var/app
+ENV BUNDLE_VERSION 2.1.4
+ENV BUNDLE_PATH /usr/local/bundle/gems
+ENV TMP_PATH /tmp/
+ENV RAILS_LOG_TO_STDOUT true
+ENV RAILS_PORT 3000 
 
 # Add a script to be executed every time the container starts.
-COPY entrypoint.sh /usr/bin/
-RUN chmod +x /usr/bin/entrypoint.sh
-ENTRYPOINT ["entrypoint.sh"]
-EXPOSE 3000
+COPY ./entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
 
-# Configure the main process to run when running the image
-CMD ["bundle", "exec", "rails", "s", "-b", "0.0.0.0"]
+# install dependencies for application
+RUN apk -U add --no-cache \
+build-base \
+git \
+postgresql-dev \
+postgresql-client \
+libxml2-dev \
+libxslt-dev \
+nodejs \
+yarn \
+imagemagick \
+tzdata \
+less \
+&& rm -rf /var/cache/apk/* \
+&& mkdir -p $APP_PATH 
+
+RUN gem install bundler --version "$BUNDLE_VERSION" \
+&& rm -rf $GEM_HOME/cache/*
+
+# navigate to app directory
+WORKDIR $APP_PATH
+
+EXPOSE $RAILS_PORT
+
+ENTRYPOINT [ "bundle", "exec", "sh" ]

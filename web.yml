@@ -1,0 +1,23 @@
+---
+- hosts: ansible
+
+  tasks:
+  - name: create docker image
+    command: sudo docker-compose build
+    args:
+      chdir: /opt/docker
+
+  - name: to check the container
+    command: sudo docker-compose run --rm web rails g model post body:text
+    args:
+      chdir: /opt/docker
+
+  - name: to check if the db connection 
+    command: sudo docker-compose run --rm web rails db:migrate
+    args:
+      chdir: /opt/docker
+
+  - name: bring the compose up
+    command: sudo docker-compose up --detach
+    args:
+      chdir: /opt/docker
